@@ -1,14 +1,9 @@
 import random
-import PySimpleGUI as sg
-
-# ---------------------------------------------------------------------------
-# Backend
-# ---------------------------------------------------------------------------
 def generate_pickleball_mixer(players, num_courts, num_rounds, seed=None):
   """Generates a rotating-doubles pickleball round-robin schedule.
 
     Parameters:
-        players (list): List of player names. 
+        players (list): List of player names.
         num_courts (int): Number of available courts.
         num_rounds (int): Total number of rounds to play.
         seed (int, optional): Random seed for reproducible schedules.
@@ -61,118 +56,31 @@ def generate_pickleball_mixer(players, num_courts, num_rounds, seed=None):
 
   return schedule
 
+# --- Example Usage ---
+if __name__ == "__main__":
+  players_list = [
+      "Alex",
+      "Jordan",
+      "Taylor",
+      "Morgan",
+      "Casey",
+      "Jamie",
+      "Riley",
+      "Cameron",
+      "Sam"
+  ]
+  courts = 2
+  rounds = 5
 
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
-def parse_players(raw_text):
-  """Accepts one name per line and/or comma-separated names.
+  schedule = generate_pickleball_mixer(
+      players=players_list, num_courts=courts, num_rounds=rounds, seed=42
+  )
 
-  Blank entries are dropped and duplicates are removed (order preserved).
-  """
-  names = []
-  for line in raw_text.splitlines():
-    for part in line.split(","):
-      name = part.strip()
-      if name and name not in names:
-        names.append(name)
-  return names
-
-
-def format_schedule(schedule):
-  """Formats the schedule the same way as the original console output."""
-  lines = []
   for r_info in schedule:
-    lines.append(f"\n--- Round {r_info['round']} ---")
+    print(f"\n--- Round {r_info['round']} ---")
     for m in r_info["matches"]:
       t1 = " & ".join(m["team_1"])
       t2 = " & ".join(m["team_2"])
-      lines.append(f"  Court {m['court']}: [{t1}] vs [{t2}]")
+      print(f"  Court {m['court']}: [{t1}] vs [{t2}]")
     if r_info["sitting_out"]:
-      lines.append(f"  Sitting out (Bye): {', '.join(r_info['sitting_out'])}")
-  return "\n".join(lines).lstrip("\n")
-
-
-# ---------------------------------------------------------------------------
-# UI
-# ---------------------------------------------------------------------------
-def main():
-  sg.theme("LightGreen6")
-
-  default_players = "Alex\nJordan\nTaylor\nMorgan\nCasey\nJamie\nRiley\nCameron\nSam"
-
-  input_column = [
-      [sg.Text("Players (one per line, or comma-separated)")],
-      [sg.Multiline(default_text=default_players, key="-PLAYERS-",
-                    size=(30, 14), no_scrollbar=False)],
-      [sg.Text("Rounds"),
-       sg.Spin(list(range(1, 51)), initial_value=5, key="-ROUNDS-",
-               size=(5, 1), readonly=False)],
-      [sg.Text("Courts"),
-       sg.Spin(list(range(1, 21)), initial_value=2, key="-COURTS-",
-               size=(5, 1), readonly=False)],
-      [sg.Text("Seed (optional)"),
-       sg.Input(key="-SEED-", size=(10, 1))],
-      [sg.Button("Shuffle", key="-SHUFFLE-", size=(10, 1)),
-       sg.Button("Copy", key="-COPY-", size=(8, 1)),
-       sg.Button("Exit", size=(8, 1))],
-      [sg.Text("", key="-STATUS-", size=(30, 2), text_color="firebrick")],
-  ]
-
-  output_column = [
-      [sg.Text("Schedule")],
-      [sg.Multiline(key="-OUTPUT-", size=(60, 24), disabled=True,
-                    font=("Courier New", 10), autoscroll=False)],
-  ]
-
-  layout = [[sg.Column(input_column, vertical_alignment="top"),
-             sg.VSeparator(),
-             sg.Column(output_column, vertical_alignment="top")]]
-
-  window = sg.Window("Pickleball Mixer", layout, finalize=True)
-
-  while True:
-    event, values = window.read()
-    if event in (sg.WIN_CLOSED, "Exit"):
-      break
-
-    if event == "-SHUFFLE-":
-      window["-STATUS-"].update("")
-
-      players_list = parse_players(values["-PLAYERS-"])
-
-      try:
-        rounds = int(values["-ROUNDS-"])
-        courts = int(values["-COURTS-"])
-      except (TypeError, ValueError):
-        window["-STATUS-"].update("Rounds and courts must be whole numbers.")
-        continue
-
-      seed_text = (values["-SEED-"] or "").strip()
-      try:
-        seed = int(seed_text) if seed_text else None
-      except ValueError:
-        window["-STATUS-"].update("Seed must be a whole number (or blank).")
-        continue
-
-      if len(players_list) < 4:
-        window["-STATUS-"].update("Enter at least 4 players.")
-        continue
-      if rounds < 1 or courts < 1:
-        window["-STATUS-"].update("Rounds and courts must be at least 1.")
-        continue
-
-      schedule = generate_pickleball_mixer(
-          players=players_list, num_courts=courts, num_rounds=rounds, seed=seed
-      )
-      window["-OUTPUT-"].update(format_schedule(schedule))
-
-    elif event == "-COPY-":
-      sg.clipboard_set(values["-OUTPUT-"])
-      window["-STATUS-"].update("Schedule copied to clipboard.")
-
-  window.close()
-
-
-if __name__ == "__main__":
-  main()
+      print(f"  Sitting out (Bye): {', '.join(r_info['sitting_out'])}")
